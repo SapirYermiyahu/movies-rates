@@ -26,7 +26,7 @@ const Table = (props: TableProps) => {
   const getMoviesData = async () => {	
     const res = await getMovies();		
 	if(res){
-		if (res.status === APIResult.SUCCESS) {
+		if (res.status === APIResult.SUCCESS) {			
 			setMoviesFromAPI(res.body);
 			props.setMoviesApiData(res.body);
 			props.setIsLoading(false)
@@ -43,22 +43,21 @@ const Table = (props: TableProps) => {
  	Runs updateMoviesVotes function to re calculate the votes each time we are getting more data from hub/movies list changes
   */
   useEffect(() => {
-    updateMoviesVotes();	
+    updateMoviesVotes();		
   }, [props.moviesVotes, moviesFromApi]);
 
   /* 
  	Add movies votes to the last movies data
   */
-  const updateMoviesVotes = async () => {
-    const sumVotesObj = await sumVotes();
-    if (moviesFromApi.length && Object.keys(sumVotesObj).length != 0) {
-      for (let i = 0; i < moviesFromApi.length; i++) {
-        if (sumVotesObj.hasOwnProperty(moviesFromApi[i].id)) {
-          moviesFromApi[i].votes += sumVotesObj[moviesFromApi[i].id].votes;
-          moviesFromApi[i].lastUpdated =
-            sumVotesObj[moviesFromApi[i].id].lastUpdated;
+  const updateMoviesVotes = async () => {	
+    const sumVotesObj = await sumVotes();	
+    if (moviesFromApi.length && Object.keys(sumVotesObj).length != 0) { // check we have movies list and data in sumVotesObj
+      for (let i = 0; i < moviesFromApi.length; i++) { // iteration over all movies
+        if (sumVotesObj.hasOwnProperty(moviesFromApi[i].id)) { // if we have new data for the current movie, lets update votes & last updated
+			moviesFromApi[i].votes = sumVotesObj[moviesFromApi[i].id].votes;
+		  	moviesFromApi[i].lastUpdated = sumVotesObj[moviesFromApi[i].id].lastUpdated;
         }
-      }
+      }	  
       setMoviesWithVotes(moviesFromApi);
     }
   };
@@ -67,22 +66,17 @@ const Table = (props: TableProps) => {
   Re calculate the movies votes, runs in case we got new data from hub
   @return Object => the object property is the movie id, the value is an object with votes and last updated data
   */
-  const sumVotes = () => {
+  const sumVotes = () => {	
     for (let i = 0; i < props.moviesVotes.length; i++) {
-      if (sumVotesObj.hasOwnProperty(props.moviesVotes[i].itemId)) { // case already added movie to sumVotesObj
-        sumVotesObj[props.moviesVotes[i].itemId].votes +=
-          props.moviesVotes[i].itemCount;
-        if (sumVotesObj[props.moviesVotes[i].itemId].lastUpdated <  // case current last updated is bigger that the value we already have, we'll update the value to newest
-          props.moviesVotes[i].generatedTime) {
-          sumVotesObj[props.moviesVotes[i].itemId].lastUpdated =
-            props.moviesVotes[i].generatedTime;
-        }
-      } else {														// case we don't have yet data about the movie votes in the obj
-        sumVotesObj[props.moviesVotes[i].itemId] = {
+		const itemId = props.moviesVotes[i].itemId;
+		const lastDataTimeRevieved = props.moviesVotes[i].generatedTime
+      if (sumVotesObj.hasOwnProperty(itemId)) { 		// case already added movie to sumVotesObj
+          sumVotesObj[itemId].votes += props.moviesVotes[i].itemCount; 
+          sumVotesObj[itemId].lastUpdated = new Date(lastDataTimeRevieved).toUTCString()
+      } else {											// case we don't have yet data about the movie votes in the obj
+        sumVotesObj[itemId] = {
           votes: props.moviesVotes[i].itemCount,
-          lastUpdated: new Date(
-            props.moviesVotes[i].generatedTime
-          ).toUTCString(),
+          lastUpdated: new Date(lastDataTimeRevieved).toUTCString(),
         };
       }
 	  setSumVotesObj(sumVotesObj)

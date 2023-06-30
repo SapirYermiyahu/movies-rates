@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { Form, Select } from "antd";
 import { MoviesFromAPI, HubData, ChartDatatType } from "../types";
+import { getDateWithTimeFormat, sortArrayByTime } from '../utils';
 
 type ChartProps = {
   moviesApiData: MoviesFromAPI[];
@@ -28,14 +29,14 @@ const RenderLineChart = (props: ChartProps) => {
     allMoviesVotes = [...allMoviesVotes, ...props.moviesVotes];
     setAllMoviesVotes(allMoviesVotes);
 
-	if(allMoviesVotes.length > 500){ // we want to prevent a situation when array is too big (to prevent security and performance issues)
+	if(allMoviesVotes.length > 500){ // to prevent a situation when array is too big (to prevent security and performance issues)
 		allMoviesVotes.splice(0, 400);
 		setAllMoviesVotes(allMoviesVotes)
 	}
   }, [props.moviesVotes]);
 
 /* 
-Organize the data for chart when user change selection
+Organize the data for chart when user change selection, we need to go over the whole movies votes because we dont have previous calculated data per movie
 */  
   const handleChange = (movieId: number) => {
     let dataForChart: ChartDatatType[] = [];
@@ -43,9 +44,7 @@ Organize the data for chart when user change selection
       if (allMoviesVotes[i].itemId === movieId) {
         // I assume that we get different times every time from Hub		
 			dataForChart.push({
-				name: new Date(
-					allMoviesVotes[i].generatedTime
-				).toLocaleDateString(),
+				name: getDateWithTimeFormat(allMoviesVotes[i].generatedTime),
 				votes: allMoviesVotes[i].itemCount,
 			});
       }
@@ -59,9 +58,6 @@ Organize the data for chart when user change selection
     setChartData(dataForChart);
   };
 
-  const sortArrayByTime = (arr: Array<ChartDatatType>): ChartDatatType[] => {
-	return arr.sort((a,b) => Date.parse(a.name) - Date.parse(b.name))
-  }
 
   /* 
  	Render options for select 

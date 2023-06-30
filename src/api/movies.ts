@@ -11,8 +11,7 @@ export const getMovies: () => Promise<
   const baseUrl = await getBaseURL("api");
   const token = await getUserExistingToken();
   if(token){
-	const api = new APIService(token).setHeaders(requestHeaders);
-  
+	const api = new APIService(token).setHeaders(requestHeaders);	
 	return fetch(baseUrl + Endpoints.get_movies, api.request())
 		  .then(res =>  res.json().then(data => ({status: res.status, body: data})))
 		  .then(data => {			

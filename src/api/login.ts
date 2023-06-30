@@ -4,7 +4,7 @@ import getBaseURL from "../services/BaseURL";
 import { APIService } from "../services/APIService";
 import { APIMethod, APIResult } from "../constants";
 import Cookies from "universal-cookie";
-import { LoginRequest, ApiResponse } from "../types";
+import { LoginRequest, ApiResponse, LoginResponse } from "../types";
 import { log } from "console";
 
 const api = new APIService()
@@ -15,7 +15,7 @@ const cookies = new Cookies();
 export const login = async () => {
   const resToken = await getAuthToken()
   if (resToken.status === APIResult.SUCCESS && resToken.body) {
-    cookies.set("Authorization", resToken.body, {
+    cookies.set("Authorization", resToken.body.token, {
       path: "/",
       expires: new Date(Date.now() + 86400),
     }); // cookie expire after 1 day
@@ -24,19 +24,19 @@ export const login = async () => {
   return null;
 };
 
-const getAuthToken: () => Promise<ApiResponse<string>> = async () => {
-  const baseUrl: string = await getBaseURL("api");
+const getAuthToken: () => Promise<ApiResponse<LoginResponse>> = async () => {
+  const baseUrl: string = await getBaseURL("api");  
   const body: LoginRequest = { username: process.env.REACT_APP_LOGIN_USER, password: process.env.REACT_APP_LOGIN_PASSWORD };
   return fetch(baseUrl + Endpoints.login, api.request(body))
     .then((res) =>
       res.json().then((data) => ({ status: res.status, body: data }))
     )
     .then((data) => {
-      const response: ApiResponse<string> = data;
+      const response: ApiResponse<LoginResponse> = data;
       return response;
     })
 };
 
-export const getUserExistingToken = (): string => {
+export const getUserExistingToken = (): string => {	
   return cookies.get("Authorization");
 };

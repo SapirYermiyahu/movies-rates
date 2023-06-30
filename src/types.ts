@@ -28,8 +28,8 @@ export interface MoviesWithVotes {
 }
 
 export interface LoginRequest {
-	username: any,
-	password: any
+	username: string | undefined,
+	password: string | undefined
 }
 
 export type ApiResponse<T> = {
@@ -44,5 +44,9 @@ export type ChartDatatType = {
 
 export type SumVotes = {
 	[key: number]: {votes: number, lastUpdated: string},
+}
+
+export type LoginResponse = {
+	token: string
 }
   

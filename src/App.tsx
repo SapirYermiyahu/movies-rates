@@ -9,7 +9,6 @@ import { login, getUserExistingToken } from "./api/login";
 import Loader from './components/common/loader'
 import ErrorPage from './components/common/errorPage'
 import "./App.css";
-
 /* 
 Description about component actions:
  The main component, holds the header, table and chart component.
@@ -35,15 +34,12 @@ function App() {
 
   /* If connection to hub exist and connected => start listening to hub and set connection status */
   useEffect(() => {
-	collectHubData(); // remove
-    if (connection) {
-      if (connection.state === HubConnectionState.Disconnected) {
-        setConnectionStatus(false);
-      } else if (connection.state === HubConnectionState.Connected) {
-		collectHubData();
-        setConnectionStatus(true);
-      }
-    }
+	if(connection){				
+		if (connection.state === HubConnectionState.Disconnected) {
+			setConnectionStatus(false)
+		}
+	}
+	collectHubData();
   }, [connection]);
 
   /* 
@@ -59,7 +55,7 @@ function App() {
     if (newToken || existingToken) {
       setIsLoggedIn(true);
 	  setIsError(false)
-      newToken ? buildConnection(newToken) : buildConnection(existingToken)
+      newToken ? buildConnection(newToken.token) : buildConnection(existingToken)
     }else{ // user cant logged in
 		setIsError(true)
 	}
@@ -69,7 +65,7 @@ function App() {
   	Function to create the connection to hub for the 1st time
   */
   const buildConnection = async (token: string) => {
-    const connection = await getConnectionToHub(token);
+    const connection = await getConnectionToHub(token);	
     setConnection(connection);
   };
 
@@ -78,21 +74,22 @@ function App() {
   */
   const collectHubData = async () => {
       	if (connection && isLoggedIn) {
-            connection.start()
+             connection.start()
                 .then(result => {
-                    connection.on('DataReceived', data => {
-						const updatedMoviesData:HubData[] = [...latestMoviesData.current];						
-                        updatedMoviesData.push(...data);
-                        setMoviesVotesData(updatedMoviesData);  
+					if (connection.state === HubConnectionState.Connected) {
+						setConnectionStatus(true)
+					}					
+                    connection.on('DataReceived', data => {	
+                        setMoviesVotesData(data);  
 						setLastTimeReceivedData(new Date().toLocaleString())
                     });
                 })
                 .catch(e => {
-					console.log('Connection failed: ', e)
+					console.log(e)
 					setIsError(true)
 				});
-        }  
-  };
+        } 
+  }; 
 
   /* 
  	Function to get the movies data from table component
